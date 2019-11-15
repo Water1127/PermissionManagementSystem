@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+            http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/security
+            http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+        <!-- 配置不拦截的资源
+                    登录失败后的页面 和 登录成功后的页面 需要配置成未登录的情况下也可以访问；
+                    否则，登录成功或失败后，页面又会被 Spring security 重定向到登录页面。-->
+        <security:http pattern="/login.jsp" security="none"/>
+        <security:http pattern="/failer.jsp" security="none"/>
+        <security:http pattern="/css/**" security="none"/>
+        <security:http pattern="/img/**" security="none"/>
+        <security:http pattern="/plugins/**" security="none"/>
+
+
+        <!-- 配置HTTP规则 -->
+        <security:http auto-config="true" use-expressions="true"> <!-- 框架提供默认登录页面；支持SPEL表达式。 -->
+            <!-- 配置拦截规则 -->
+            <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER','ROLE_ADMIN')"/> <!-- 拦截任意路径，需要ROLE_USER -->
+            <!-- 配置跳转页面 -->
+            <security:form-login
+                    login-page="/login.jsp"
+                    login-processing-url="/login.do"
+                    default-target-url="/index.jsp"
+                    authentication-failure-url="/failer.jsp"
+                    authentication-success-forward-url="/pages/main.jsp"/>
+            <!-- 设置跨域请求 -->
+            <security:csrf disabled="true"/> <!-- 关闭跨域请求，允许接受POST方式请求 -->
+            <!-- 配置退出 -->
+            <security:logout invalidate-session="true" logout-url="/logout.do" logout-success-url="/login.jsp"/>
+        </security:http>
+
+
+        <!-- 切换成数据库中的用户名和密码 -->
+        <security:authentication-manager>
+            <security:authentication-provider user-service-ref="userService">
+                <!-- 配置加密的方式-->
+                <security:password-encoder ref="passwordEncoder"/>
+            </security:authentication-provider>
+        </security:authentication-manager>
+
+        <!-- 配置加密类 -->
+        <bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+        <!-- 配置权限控制方法 -->
+        <security:global-method-security
+            jsr250-annotations="enabled"
+            secured-annotations="enabled"
+            pre-post-annotations="enabled"/>
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+

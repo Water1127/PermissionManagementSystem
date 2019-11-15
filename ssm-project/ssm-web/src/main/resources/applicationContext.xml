@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+    <!-- 开启注解扫描 -->
+    <context:component-scan base-package="cn.water.project.dao"/>
+    <context:component-scan base-package="cn.water.project.service"/>
+
+    <!-- 加载外部配置 -->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!-- 连接池 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!-- Spring控制 SqlSession对象 -->
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 扫描Domain类 -->
+        <property name="typeAliasesPackage" value="cn.water.project.domain"/>
+        <!-- PagesHelper，分页管理 -->
+        <property name="plugins">
+            <array>
+                <bean class="com.github.pagehelper.PageInterceptor">
+                    <property name="properties">
+                        <props>
+                            <prop key="helperDialect"> mysql </prop>
+                            <prop key="reasonable"> true  </prop>
+                        </props>
+                    </property>
+                </bean>
+            </array>
+        </property>
+    </bean>
+
+    <!-- 扫描映射接口，创建接口的代理对象，存储到Spring容器 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 扫描Dao接口 -->
+        <property name="basePackage" value="cn.water.project.dao"/>
+    </bean>
+
+    <!-- 配置Spring声明式事务管理 -->
+    <!-- 事务管理器 -->
+    <bean id="transactionManagement" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!-- 注解支持 -->
+    <tx:annotation-driven transaction-manager="transactionManagement"/>
+
+
+
+
+
+</beans>
